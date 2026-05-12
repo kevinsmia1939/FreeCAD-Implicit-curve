@@ -8,7 +8,7 @@ from .generator import generate_tpms_shape
 
 FAMILY_LABELS = ("Schwarz P", "Gyroid", "Diamond")
 FAMILY_TO_KEY = {"Gyroid": "gyroid", "Diamond": "diamond", "Schwarz P": "schwarz_p"}
-MODE_LABELS = ("Surface",)
+MODE_LABELS = ("Surface", "Spline Layers")
 
 
 class ImplicitTPMSFeature:
@@ -30,7 +30,7 @@ class ImplicitTPMSFeature:
             ("CellsY", 1),
             ("CellsZ", 1),
             ("Resolution", 36),
-            ("SliceCount", 36),
+            ("BSplineLayers", 36),
         ):
             obj.addProperty("App::PropertyInteger", name, "TPMS", name)
             setattr(obj, name, default)
@@ -45,14 +45,15 @@ class ImplicitTPMSFeature:
             setattr(obj, name, default)
 
     def execute(self, obj):
+        bspline_layers = getattr(obj, "BSplineLayers", getattr(obj, "SliceCount", 36))
         config = TPMSConfig(
             family=FAMILY_TO_KEY.get(obj.Family, "schwarz_p"),
             cells=(max(1, obj.CellsX), max(1, obj.CellsY), max(1, obj.CellsZ)),
             scale=(obj.CellScaleX, obj.CellScaleY, obj.CellScaleZ),
             resolution=max(12, obj.Resolution),
-            slice_count=max(4, obj.SliceCount),
+            bspline_layers=max(2, bspline_layers),
             isovalue=obj.IsoValue,
-            mode="surface",
+            mode="splines" if obj.Mode == "Spline Layers" else "surface",
         )
         obj.Shape = generate_tpms_shape(config)
 

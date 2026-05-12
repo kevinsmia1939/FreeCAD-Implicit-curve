@@ -290,34 +290,20 @@ def _loft_pair(lower: _Contour, upper: _Contour, sample_count: int):
         return Part.Shell(faces)
 
 
-def generate_tpms_shape(config: TPMSConfig):
-    """Generate a native FreeCAD shape by lofting stacked implicit contours."""
+def _contour_wire(contour: _Contour, sample_count: int):
+    points = _resample(contour.points, sample_count, contour.closed)
+    return _bspline_wire(points, contour.closed)
+
+
+def _compound_or_single(shapes):
     import Part
-
-    _cells, scale, extent = _domain(config)
-    samples = max(16, int(config.resolution))
-    slice_count = max(4, int(config.slice_count))
-    z_values = np.linspace(0.0, extent[2], slice_count)
-    contours_by_slice = [_slice_contours(config, z_value, samples) for z_value in z_values]
-
-    max_step = max(extent[0] * scale[0], extent[1] * scale[1]) / max(4.0, samples / 2.0)
-    shapes = []
-    sample_count = min(96, max(24, samples * 2))
-    for lower, upper in zip(contours_by_slice, contours_by_slice[1:]):
-        for lower_contour, upper_contour in _match_contours(lower, upper, max_step):
-            try:
-                shapes.append(_loft_pair(lower_contour, upper_contour, sample_count))
-            except Exception:
-                continue
 
     if not shapes:
         raise RuntimeError(
-            "No TPMS contour surfaces were generated. Try a higher resolution or a different isovalue."
+            "No TPMS contour curves were generated. Try a higher resolution or a different isovalue."
         )
-
     if len(shapes) == 1:
         return shapes[0]
-
     compound = Part.Compound(shapes)
     if hasattr(compound, "removeSplitter"):
         try:
@@ -325,3 +311,38 @@ def generate_tpms_shape(config: TPMSConfig):
         except Exception:
             return compound
     return compound
+
+
+def generate_tpms_shape(config: TPMSConfig):
+    """Generate a native FreeCAD shape by lofting stacked implicit contours."""
+    _cells, scale, extent = _domain(config)
+    samples = max(16, int(config.resolution))
+    slice_count = max(2, int(config.bspline_layers))
+    z_values = np.linspace(0.0, extent[2], slice_count)
+    contours_by_slice = [_slice_contours(config, z_value, samples) for z_value in z_values]
+
+    shapes = []
+    sample_count = min(96, max(24, samples * 2))
+    if config.mode == "splines":
+        for contours in contours_by_slice:
+            for contour in contours:
+                try:
+                    shapes.append(_contour_wire(contour, sample_count))
+                except Exception:
+                    continue
+        return _compound_or_single(shapes)
+
+    max_step = max(extent[0] * scale[0], extent[1] * scale[1]) / max(4.0, samples / 2.0)
+    for lower, upper in zip(contours_by_slice, contours_by_slice[1:]):
+        for lower_contour, upper_contour in _match_contours(lower, upper, max_step):
+            try:
+                shapes.append(_loft_pair(lower_contour, upper_contour, sample_count))
+            except Exception:
+                continue
+
+    try:
+        return _compound_or_single(shapes)
+    except RuntimeError as exc:
+        raise RuntimeError(
+            "No TPMS contour surfaces were generated. Try a higher resolution or a different isovalue."
+        ) from exc

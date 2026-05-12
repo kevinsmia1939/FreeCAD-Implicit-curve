@@ -15,16 +15,25 @@ Each command creates a `Part::FeaturePython` object with editable properties:
 - `Mode`
 - `CellsX`, `CellsY`, `CellsZ`
 - `Resolution`
-- `SliceCount`
+- `BSplineLayers`
 - `IsoValue`
 - `CellScaleX`, `CellScaleY`, `CellScaleZ`
+
+`Mode` controls the output:
+
+- `Spline Layers` shows only the generated B-spline contour layers.
+- `Surface` lofts surfaces between matched contour layers.
+
+Use `BSplineLayers` to control how many stacked B-spline layers are generated
+through the cell in the Z direction. `Resolution` controls the in-plane contour
+sampling density for each layer.
 
 ## Dependency
 
 The current generator uses `numpy` to sample the implicit field on stacked
 planes. Each plane is converted into contour curves with marching squares; the
-curves are resampled, converted to FreeCAD B-spline wires, and lofted between
-adjacent slices.
+curves are resampled, converted to FreeCAD B-spline wires, and either shown
+directly or lofted between adjacent layers.
 
 ## Implementation Note
 

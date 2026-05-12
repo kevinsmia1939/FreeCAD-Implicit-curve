@@ -7,7 +7,7 @@ from typing import Literal
 
 
 TPMSFamily = Literal["gyroid", "diamond", "schwarz_p"]
-OutputMode = Literal["surface"]
+OutputMode = Literal["surface", "splines"]
 
 
 @dataclass(frozen=True)
@@ -16,6 +16,6 @@ class TPMSConfig:
     cells: tuple[int, int, int] = (1, 1, 1)
     scale: tuple[float, float, float] = (1.0, 1.0, 1.0)
     resolution: int = 48
-    slice_count: int = 48
+    bspline_layers: int = 48
     isovalue: float = 0.0
     mode: OutputMode = "surface"
