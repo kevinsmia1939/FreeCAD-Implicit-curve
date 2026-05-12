@@ -8,7 +8,7 @@ from .generator import generate_tpms_shape
 
 FAMILY_LABELS = ("Schwarz P", "Gyroid", "Diamond")
 FAMILY_TO_KEY = {"Gyroid": "gyroid", "Diamond": "diamond", "Schwarz P": "schwarz_p"}
-MODE_LABELS = ("Solid", "Surface")
+MODE_LABELS = ("Surface",)
 
 
 class ImplicitTPMSFeature:
@@ -23,43 +23,36 @@ class ImplicitTPMSFeature:
 
         obj.addProperty("App::PropertyEnumeration", "Mode", "TPMS", "Output mode")
         obj.Mode = MODE_LABELS
-        obj.Mode = "Solid"
+        obj.Mode = "Surface"
 
-        for name, default in (("CellsX", 1), ("CellsY", 1), ("CellsZ", 1), ("Resolution", 36)):
+        for name, default in (
+            ("CellsX", 1),
+            ("CellsY", 1),
+            ("CellsZ", 1),
+            ("Resolution", 36),
+            ("SliceCount", 36),
+        ):
             obj.addProperty("App::PropertyInteger", name, "TPMS", name)
             setattr(obj, name, default)
 
         for name, default in (
-            ("OffsetPlus", 0.1),
-            ("OffsetMinus", 0.0),
-            ("Tolerance", 0.005),
             ("CellScaleX", 1.0),
             ("CellScaleY", 1.0),
             ("CellScaleZ", 1.0),
             ("IsoValue", 0.0),
-            ("WallThickness", 0.12),
-            ("SewingTolerance", 1e-3),
         ):
             obj.addProperty("App::PropertyFloat", name, "TPMS", name)
             setattr(obj, name, default)
-
-        obj.addProperty("App::PropertyInteger", "MaxErrorIterations", "TPMS", "Maximum fitting iterations")
-        obj.MaxErrorIterations = 1
 
     def execute(self, obj):
         config = TPMSConfig(
             family=FAMILY_TO_KEY.get(obj.Family, "schwarz_p"),
             cells=(max(1, obj.CellsX), max(1, obj.CellsY), max(1, obj.CellsZ)),
-            offset_plus=obj.OffsetPlus,
-            offset_minus=obj.OffsetMinus,
-            tolerance=max(1e-6, obj.Tolerance),
-            max_error_iterations=max(1, obj.MaxErrorIterations),
             scale=(obj.CellScaleX, obj.CellScaleY, obj.CellScaleZ),
             resolution=max(12, obj.Resolution),
+            slice_count=max(4, obj.SliceCount),
             isovalue=obj.IsoValue,
-            wall_thickness=max(1e-6, obj.WallThickness),
-            mode="solid" if obj.Mode == "Solid" else "surface",
-            sewing_tolerance=max(1e-9, obj.SewingTolerance),
+            mode="surface",
         )
         obj.Shape = generate_tpms_shape(config)
 
@@ -88,4 +81,3 @@ class ImplicitTPMSViewProvider:
 
     def getIcon(self):
         return ""
-

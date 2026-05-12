@@ -22,7 +22,7 @@ def _module_dir():
 
 class ImplicitTPMSWorkbench(Workbench):
     MenuText = "Implicit TPMS"
-    ToolTip = "Create implicit TPMS surfaces and solids as native Part shapes"
+    ToolTip = "Create implicit TPMS surfaces as native Part shapes"
 
     def Initialize(self):
         from implicit_tpms.commands import register_commands
