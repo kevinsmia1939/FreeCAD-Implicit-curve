@@ -38,7 +38,7 @@ python -m pip install scikit-image
 ## Implementation Note
 
 The included `implicit_tpms.bspline` module implements the B-spline basis and
-surface evaluation utilities described in `tpms2step_python_reimplementation_spec.md`.
-The current FreeCAD object is an MVP faceted B-rep backend; the B-spline TPMS
-patch fitting and symmetry assembly from the spec can be layered behind the same
-`TPMSConfig` and FeaturePython properties.
+surface evaluation utilities used by the workbench. The current FreeCAD object
+is an MVP faceted B-rep backend; B-spline TPMS patch fitting and symmetry
+assembly can be layered behind the same `TPMSConfig` and FeaturePython
+properties.
